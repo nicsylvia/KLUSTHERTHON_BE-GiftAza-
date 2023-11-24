@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import UserModels from "../Models/UserModels";
 import { AsyncHandler } from "../Utils/AsyncHandler";
-import Cloud from "../Config/cloudinary";
 import bcrypt from "bcrypt";
 import { AppError, HTTPCODES } from "../Utils/AppError";
 import BusinessModels from "../Models/BusinessModels";
@@ -12,31 +11,7 @@ import GiftCardModels from "../Models/GiftCardModels";
 import crypto from "crypto";
 import axios from "axios";
 import { EnvironmentVariables } from "../Config/EnvironmentVariables";
-import { verifyUserEmail, verifyUserEmailByAdmin } from "../Utils/Email";
-
-// My secret key from Kora dashboard
-const secret = EnvironmentVariables.Kora_secret_key;
-
-// Encrypted Key from Kora dashboard
-const encrypt = EnvironmentVariables.Encrypted_key;
-
-// Kora's API that we'll be hiiting on to do pay ins (zenith bank to wallet)
-const urlData = "https://api.korapay.com/merchant/api/v1/charges/card";
-
-// Function to encrypt the payment that will be coming in
-function encryptAES256(encryptionKey: string, paymentData: any) {
-  const iv = crypto.randomBytes(16);
-
-  const cipher = crypto.createCipheriv("aes-256-gcm", encryptionKey, iv);
-  const encrypted = cipher.update(paymentData);
-
-  const ivToHex = iv.toString("hex");
-  const encryptedToHex = Buffer.concat([encrypted, cipher.final()]).toString(
-    "hex"
-  );
-
-  return `${ivToHex}:${encryptedToHex}:${cipher.getAuthTag().toString("hex")}`;
-}
+import { verifyUserEmail, verifyUserEmailByAdmin } from "../Emails/Email";
 
 // Users Registration:
 export const UsersRegistration = AsyncHandler(
@@ -140,139 +115,114 @@ export const GetSingleUser = AsyncHandler(
 );
 
 // User wants to buy a business gift card using Kora's APIs to make Payment with ATM card - // User wants to buy a business gift card using payment with their card:
-export const UserBuyAGiftCardWithATMcard = AsyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const {
-      amount,
-      name,
-      number,
-      cvv,
-      pin,
-      expiry_year,
-      expiry_month,
-      title,
-      description,
-    } = req.body;
+// export const UserBuyAGiftCardWithATMcard = AsyncHandler(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const {
+//       amount,
+//       name,
+//       number,
+//       cvv,
+//       pin,
+//       expiry_year,
+//       expiry_month,
+//       title,
+//       description,
+//     } = req.body;
 
-    const GenerateTransactionReference = uuid();
+//     const GenerateTransactionReference = uuid();
 
-    // To get both single user and business
-    const user = await UserModels.findById(req.params.userID);
-    const Business = await BusinessModels.findById(req.params.businessID);
-    const giftcard = await GiftCardModels.findById(req.params.giftcardID);
+//     // To get both single user and business
+//     const user = await UserModels.findById(req.params.userID);
+//     const Business = await BusinessModels.findById(req.params.businessID);
+//     const giftcard = await GiftCardModels.findById(req.params.giftcardID);
 
-    if (!user && !Business && !giftcard) {
-      next(
-        new AppError({
-          message: "Invalid Account, Does not exist",
-          httpcode: HTTPCODES.NOT_FOUND,
-        })
-      );
-    }
+//     if (!user && !Business && !giftcard) {
+//       next(
+//         new AppError({
+//           message: "Invalid Account, Does not exist",
+//           httpcode: HTTPCODES.NOT_FOUND,
+//         })
+//       );
+//     }
 
-    // If no gift card from this business:
-    if (!Business?.giftCard) {
-      next(
-        new AppError({
-          message: `${Business?.companyName} does not have a gift card yet`,
-          httpcode: HTTPCODES.NOT_FOUND,
-        })
-      );
-    }
+//     // If no gift card from this business:
+//     if (!Business?.giftCard) {
+//       next(
+//         new AppError({
+//           message: `${Business?.companyName} does not have a gift card yet`,
+//           httpcode: HTTPCODES.NOT_FOUND,
+//         })
+//       );
+//     }
 
-    if (user && Business && giftcard) {
-      // For user to make the payment from their bank to business wallet:
-      const paymentData = {
-        reference: GenerateTransactionReference,
-        card: {
-          name,
-          number,
-          cvv,
-          pin,
-          expiry_year,
-          expiry_month,
-        },
-        amount,
-        currency: "NGN",
-        redirect_url: "https://merchant-redirect-url.com",
-        customer: {
-          name: user?.name,
-          email: user?.email,
-        },
-        metadata: {
-          internalRef: "JD-12-67",
-          age: 15,
-          fixed: true,
-        },
-      };
+//     if (user && Business && giftcard) {
+//       // For user to make the payment from their bank to business wallet:
+//       const paymentData = {
+//         reference: GenerateTransactionReference,
+//         card: {
+//           name,
+//           number,
+//           cvv,
+//           pin,
+//           expiry_year,
+//           expiry_month,
+//         },
+//         amount,
+//         currency: "NGN",
+//         redirect_url: "https://merchant-redirect-url.com",
+//         customer: {
+//           name: user?.name,
+//           email: user?.email,
+//         },
+//         metadata: {
+//           internalRef: "JD-12-67",
+//           age: 15,
+//           fixed: true,
+//         },
+//       };
 
-      // To stringify the payment data coming in
-      const stringData = JSON.stringify(paymentData);
-      //The data should be in buffer form according to Kora's pay
-      const bufData = Buffer.from(stringData, "utf-8");
-      const encryptedData = encryptAES256(encrypt, bufData);
+//           // To generate a receipt for the business and a notification
+//           const BusinesstransactionHistory = await HistoryModels.create({
+//             owner: Business?.companyName,
+//             message: `${user?.name} bought a gift card from your store with money worth of ${amount}`,
+//             transactionReference: GenerateTransactionReference,
+//             transactionType: "Credit",
+//           });
 
-      var config = {
-        method: "post",
-        maxBodyLength: Infinity,
-        url: urlData,
-        headers: {
-          Authorization: `Bearer ${secret}`,
-        },
-        data: {
-          charge_data: `${encryptedData}`,
-        },
-      };
+//           Business?.TransactionHistory?.push(
+//             new mongoose.Types.ObjectId(BusinesstransactionHistory?._id)
+//           );
+//           Business.save();
 
-      axios(config)
-        .then(async function (response) {
-          // To update the balance of the business with the amount the user bought with ATM card
-          await BusinessModels.findByIdAndUpdate(Business?._id, {
-            Balance: Business?.Balance + amount,
-          });
-          // To generate a receipt for the business and a notification
-          const BusinesstransactionHistory = await HistoryModels.create({
-            owner: Business?.companyName,
-            message: `${user?.name} bought a gift card from your store with money worth of ${amount}`,
-            transactionReference: GenerateTransactionReference,
-            transactionType: "Credit",
-          });
+//           // To update the history of the user with his/her debit alert of buying a gift card
+//           const UserTransactionHistory = await HistoryModels.create({
+//             owner: user?.name,
+//             message: `You bought a gift card worth ${amount} from ${Business?.companyName}`,
+//             transactionReference: GenerateTransactionReference,
+//             transactionType: "Debit",
+//           });
 
-          Business?.TransactionHistory?.push(
-            new mongoose.Types.ObjectId(BusinesstransactionHistory?._id)
-          );
-          Business.save();
+//           user?.TransactionHistory?.push(
+//             new mongoose.Types.ObjectId(UserTransactionHistory?._id)
+//           );
+//           user.save();
 
-          // To update the history of the user with his/her debit alert of buying a gift card
-          const UserTransactionHistory = await HistoryModels.create({
-            owner: user?.name,
-            message: `You bought a gift card worth ${amount} from ${Business?.companyName}`,
-            transactionReference: GenerateTransactionReference,
-            transactionType: "Debit",
-          });
-
-          user?.TransactionHistory?.push(
-            new mongoose.Types.ObjectId(UserTransactionHistory?._id)
-          );
-          user.save();
-
-          return res.status(HTTPCODES.OK).json({
-            message: `${user?.name} successfully made payments for ${Business?.companyName} gift cards`,
-            data: {
-              paymentInfo: UserTransactionHistory,
-              paymentData: JSON.parse(JSON.stringify(response.data)),
-            },
-          });
-        })
-        .catch(function (error) {
-          next(
-            new AppError({
-              message: "Transaction failed",
-              httpcode: HTTPCODES.BAD_GATEWAY,
-              name: "Network Error",
-            })
-          );
-        });
-    }
-  }
-);
+//           return res.status(HTTPCODES.OK).json({
+//             message: `${user?.name} successfully made payments for ${Business?.companyName} gift cards`,
+//             data: {
+//               paymentInfo: UserTransactionHistory,
+//             },
+//           });
+//         })
+//         .catch(function (error) {
+//           next(
+//             new AppError({
+//               message: "Transaction failed",
+//               httpcode: HTTPCODES.BAD_GATEWAY,
+//               name: "Network Error",
+//             })
+//           );
+//         });
+//     }
+//   }
+// );

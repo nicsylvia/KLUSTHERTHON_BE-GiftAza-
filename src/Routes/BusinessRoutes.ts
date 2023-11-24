@@ -2,17 +2,11 @@ import express from "express";
 import {
   BusinessLogin,
   BusinessRegistration,
-  CheckOutToBank,
   GetSingleBusinessAcount,
   GetSingleBusinessCards,
   UpdateBusinessLogo,
   VerifiedUserFinally,
 } from "../Controllers/BusinessControllers";
-
-import {
-  BusinessRegisterValidation,
-  BusinessLoginValidation,
-} from "../Middlewares/BusinessValidation/BusinessValidation";
 
 import { BusinessLogo } from "../Config/Multer";
 
@@ -30,7 +24,6 @@ BusinessRouter.route("/updatebusinesslogo/:id").patch(
   BusinessLogo,
   UpdateBusinessLogo
 );
-BusinessRouter.route("/withdraw-money/:businessID").post(CheckOutToBank);
 BusinessRouter.route("/final-verification/:UserId").post(VerifiedUserFinally);
 
 export default BusinessRouter;

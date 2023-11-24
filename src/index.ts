@@ -4,7 +4,7 @@ import { DBCONNECTION } from "./Config/Database";
 import { EnvironmentVariables } from "./Config/EnvironmentVariables";
 import { AppConfig } from "./app";
 
-const port = 2002;
+const port = EnvironmentVariables.PORT;
 
 const app: Application = express();
 AppConfig(app);
@@ -12,7 +12,7 @@ DBCONNECTION();
 
 app.get("/", (req: Request, res: Response) => {
   return res.status(200).json({
-    message: "API READY FOR GIFT CARD IDEA CONSUMPTION",
+    message: "API READY FOR GIFT AZA IDEA CONSUMPTION",
   });
 });
 

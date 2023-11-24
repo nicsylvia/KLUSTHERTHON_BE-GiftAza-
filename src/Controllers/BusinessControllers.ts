@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express";
 import { AsyncHandler } from "../Utils/AsyncHandler";
-import cloud from "../Config/cloudinary";
 import bcrypt from "bcrypt";
 import otpgenerator from "otp-generator";
 import { AppError, HTTPCODES } from "../Utils/AppError";
@@ -11,7 +10,8 @@ import mongoose from "mongoose";
 import HistoryModels from "../Models/HistoryModels";
 import { EnvironmentVariables } from "../Config/EnvironmentVariables";
 import UserModels from "../Models/UserModels";
-import { finalVerifyAdminEmail, finalVerifyUserEmail } from "../Utils/Email";
+import cloudinary from "../Config/Cloudinary";
+import { finalVerifyAdminEmail, finalVerifyUserEmail } from "../Emails/Email";
 
 // Users Registration:
 export const BusinessRegistration = AsyncHandler(
@@ -146,7 +146,7 @@ export const UpdateBusinessLogo = AsyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
     // const { logo } = req.body;
 
-    const CloudImg = await cloud.uploader?.upload(req?.file!.path);
+    const CloudImg = await cloudinary.uploader?.upload(req?.file!.path);
 
     const BusinessLogo = await BusinessModels.findByIdAndUpdate(
       req.params.id,
@@ -220,96 +220,94 @@ export const VerifiedUserFinally = async (req: Request, res: Response) => {
   }
 };
 
-const secret = EnvironmentVariables.Kora_secret_key;
-
 // Business Transfer the funds they have in their business account to their bank:
-export const CheckOutToBank = AsyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    // Get the business details wanting to transfer the money:
-    const Business = await BusinessModels.findById(req.params.businessID);
+// export const CheckOutToBank = AsyncHandler(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     // Get the business details wanting to transfer the money:
+//     const Business = await BusinessModels.findById(req.params.businessID);
 
-    const newDate = new Date().toDateString();
+//     const newDate = new Date().toDateString();
 
-    const TransferReference = uuid();
+//     const TransferReference = uuid();
 
-    const {
-      amount,
-      name,
-      number,
-      cvv,
-      pin,
-      expiry_year,
-      expiry_month,
-      title,
-      description,
-    } = req.body;
+//     const {
+//       amount,
+//       name,
+//       number,
+//       cvv,
+//       pin,
+//       expiry_year,
+//       expiry_month,
+//       title,
+//       description,
+//     } = req.body;
 
-    if (amount > Business!.Balance) {
-      return res.status(HTTPCODES.FORBIDDEN).json({
-        message: "Insufficient Funds",
-      });
-    } else {
-      let data = JSON.stringify({
-        reference: TransferReference,
-        destination: {
-          type: "bank_account",
-          amount: `${amount}`,
-          currency: "NGN",
-          narration: "Test Transfer Payment",
-          bank_account: {
-            bank: "033",
-            account: "0000000000",
-          },
-          customer: {
-            name: Business?.companyName,
-            email: Business?.email,
-          },
-        },
-      });
+//     if (amount > Business!.Balance) {
+//       return res.status(HTTPCODES.FORBIDDEN).json({
+//         message: "Insufficient Funds",
+//       });
+//     } else {
+//       let data = JSON.stringify({
+//         reference: TransferReference,
+//         destination: {
+//           type: "bank_account",
+//           amount: `${amount}`,
+//           currency: "NGN",
+//           narration: "Test Transfer Payment",
+//           bank_account: {
+//             bank: "033",
+//             account: "0000000000",
+//           },
+//           customer: {
+//             name: Business?.companyName,
+//             email: Business?.email,
+//           },
+//         },
+//       });
 
-      var config = {
-        method: "post",
-        maxBodyLength: Infinity,
-        url: "https://api.korapay.com/merchant/api/v1/transactions/disburse",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${secret}`,
-        },
-        data: data,
-      };
+//       var config = {
+//         method: "post",
+//         maxBodyLength: Infinity,
+//         url: "https://api.korapay.com/merchant/api/v1/transactions/disburse",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${secret}`,
+//         },
+//         data: data,
+//       };
 
-      axios(config)
-        .then(async function (response) {
-          // To update the balance of the business with the amount the business withdrawed
-          await BusinessModels.findByIdAndUpdate(Business?._id, {
-            Balance: Business!.Balance - amount,
-            dateTime: newDate,
-          });
-          // To generate a receipt for the business and a notification
-          const BusinessWithdrawalHistory = await HistoryModels.create({
-            owner: Business?.companyName,
-            message: `Dear ${Business?.companyName}, a withdrawal of ${amount} was made from your account and your balance is ${Business?.Balance}`,
-            transactionReference: TransferReference,
-            transactionType: "Debit",
-            dateTime: newDate,
-          });
+//       axios(config)
+//         .then(async function (response) {
+//           // To update the balance of the business with the amount the business withdrawed
+//           await BusinessModels.findByIdAndUpdate(Business?._id, {
+//             Balance: Business!.Balance - amount,
+//             dateTime: newDate,
+//           });
+//           // To generate a receipt for the business and a notification
+//           const BusinessWithdrawalHistory = await HistoryModels.create({
+//             owner: Business?.companyName,
+//             message: `Dear ${Business?.companyName}, a withdrawal of ${amount} was made from your account and your balance is ${Business?.Balance}`,
+//             transactionReference: TransferReference,
+//             transactionType: "Debit",
+//             dateTime: newDate,
+//           });
 
-          Business?.TransactionHistory?.push(
-            new mongoose.Types.ObjectId(BusinessWithdrawalHistory?._id)
-          );
-          Business?.save();
+//           Business?.TransactionHistory?.push(
+//             new mongoose.Types.ObjectId(BusinessWithdrawalHistory?._id)
+//           );
+//           Business?.save();
 
-          return res.status(201).json({
-            message: `${Business?.companyName} successfully withdrawed ${amount} from account`,
-            data: {
-              paymentInfo: BusinessWithdrawalHistory,
-              paymentData: JSON.parse(JSON.stringify(response.data)),
-            },
-          });
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
-    }
-  }
-);
+//           return res.status(201).json({
+//             message: `${Business?.companyName} successfully withdrawed ${amount} from account`,
+//             data: {
+//               paymentInfo: BusinessWithdrawalHistory,
+//               paymentData: JSON.parse(JSON.stringify(response.data)),
+//             },
+//           });
+//         })
+//         .catch(function (error) {
+//           console.log(error);
+//         });
+//     }
+//   }
+// );

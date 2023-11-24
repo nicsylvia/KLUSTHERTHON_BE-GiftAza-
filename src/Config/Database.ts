@@ -1,8 +1,7 @@
 import mongoose from "mongoose";
 import { EnvironmentVariables } from "./EnvironmentVariables";
 
-const db_Url = "mongodb://0.0.0.0:27017/GiftAzaHackThon";
-
+const db_Url = "mongodb://0.0.0.0:27017/GiftAzaKlusterThon";
 const LIVEURI = EnvironmentVariables.MONGODB_STRING;
 
 export const DBCONNECTION = async () => {
