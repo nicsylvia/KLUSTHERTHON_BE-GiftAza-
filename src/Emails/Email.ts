@@ -4,15 +4,17 @@ import path from "path";
 import ejs from "ejs";
 
 const GOOGLE_ID =
-  "24372524741-jn16e1i5tcijldtr4ipcn55rtje4am4j.apps.googleusercontent.com";
-const GOOGLE_SECRET = "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K";
+  "711746264327-ib9iaq9rb83o7p91inap2a47o3uirrbj.apps.googleusercontent.com";
+const GOOGLE_SECRET = "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";
 
 const GOOGLE_REDIRECT = "https://developers.google.com/oauthplayground";
 const REFRESH =
-  "1//04EWZpRgB9b_LCgYIARAAGAQSNwF-L9Ir41mPdg9pgd8bDI5PhhcFOTaC07cMJnNe0TlmJ1TAdmlNypzlNRH0A5GbBysKKztA6Kk";
+  "1//04-3AwTjrEjYuCgYIARAAGAQSNwF-L9IrLZoaBCv22bphet8kwNV6rx1dVlYJZ44KQK_fAtkT1o7F4eT1qkn5_FhyjycjNTpSbm4";
 
 const oAuth = new google.auth.OAuth2(GOOGLE_ID, GOOGLE_SECRET, REFRESH);
 oAuth.setCredentials({ refresh_token: REFRESH });
+
+const url = `https://mavericks.pages.dev`;
 
 export const verifyUserEmailByAdmin = async (user: any, admin: any) => {
   try {
@@ -21,7 +23,7 @@ export const verifyUserEmailByAdmin = async (user: any, admin: any) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "nicsylvia15f@gmail.com",
+        user: "easyhrplayform@gmail.com",
         type: "OAuth2",
         clientId: GOOGLE_ID,
         clientSecret: GOOGLE_SECRET,
@@ -30,11 +32,22 @@ export const verifyUserEmailByAdmin = async (user: any, admin: any) => {
       },
     });
 
+    const getData = path.join(__dirname, "../views/AdminUserSignup.ejs");
+
+    const readData = await ejs.renderFile(getData, {
+      companyName: admin.companyName,
+      name: user?.name,
+      adminname: admin?.name,
+      email: user?.email,
+      id: user?._id,
+      url: `${url}/api/staff/${user?._id}/verification`,
+    });
+
     let mailerOptions = {
-      from: "nicsylvia15f@gmail.com",
+      from: "easyhrplayform@gmail.com",
       to: admin?.email,
-      subject: "User Email Verification",
-      html: `${admin?.companyName} , this is to inform you that <b>${user?.name} </b> wants to make a purchase`,
+      subject: "Staff Email Verification",
+      html: readData,
     };
 
     transporter
@@ -57,7 +70,7 @@ export const verifyUserEmail = async (user: any) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "nicsylvia15f@gmail.com",
+        user: "easyhrplayform@gmail.com",
         type: "OAuth2",
         clientId: GOOGLE_ID,
         clientSecret: GOOGLE_SECRET,
@@ -66,11 +79,20 @@ export const verifyUserEmail = async (user: any) => {
       },
     });
 
+    const getData = path.join(__dirname, "../views/UserSignUp.ejs");
+
+    const readData = await ejs.renderFile(getData, {
+      name: user?.name,
+      email: user?.email,
+      id: user?._id,
+      url: `${url}/${user?._id}/verifystaff`,
+    });
+
     let mailerOptions = {
-      from: "nicsylvia15f@gmail.com",
+      from: "easyhrplayform@gmail.com",
       to: user?.email,
       subject: "Email Verification",
-      html: `<div>Thanks for signing up ${user?.name} to make purchase , the business will notify you when your request has been accepted </div>`,
+      html: readData,
     };
 
     transporter
@@ -93,7 +115,7 @@ export const finalVerifyUserEmail = async (user: any) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "nicsylvia15f@gmail.com",
+        user: "easyhrplayform@gmail.com",
         type: "OAuth2",
         clientId: GOOGLE_ID,
         clientSecret: GOOGLE_SECRET,
@@ -102,13 +124,24 @@ export const finalVerifyUserEmail = async (user: any) => {
       },
     });
 
+    const getData = path.join(__dirname, "../views/FinalUserVerification.ejs");
+
+    const readData = await ejs.renderFile(getData, {
+      name: user?.name,
+      companyname: user?.companyName,
+      email: user?.email,
+      OTP: user?.token,
+      id: user?._id,
+
+      url: `${url}/${user?._id}/checkotp`,
+    });
+
     let mailerOptions = {
-      from: "nicsylvia15f@gmail.com",
+      from: "easyhrplayform@gmail.com",
       to: user?.email,
       subject: "Email Verification",
-      html: `Hi!!! ${user?.name} , your request has been accepted , use this token to sign in to continue ${user?.token}`,
+      html: readData,
     };
-
     transporter
       .sendMail(mailerOptions)
       .then(() => {
@@ -129,7 +162,7 @@ export const finalVerifyAdminEmail = async (user: any, admin: any) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "nicsylvia15f@gmail.com",
+        user: "easyhrplayform@gmail.com",
         type: "OAuth2",
         clientId: GOOGLE_ID,
         clientSecret: GOOGLE_SECRET,
@@ -138,11 +171,23 @@ export const finalVerifyAdminEmail = async (user: any, admin: any) => {
       },
     });
 
+    const getData = path.join(
+      __dirname,
+      "../views/FinalAdminStaffVerification.ejs"
+    );
+    const readData = await ejs.renderFile(getData, {
+      name: user?.name,
+      companyname: admin?.name,
+
+      id: user?._id,
+      // url: `${staffURL}/${staff?._id}/activateaccount`,
+    });
+
     let mailerOptions = {
-      from: "nicsylvia15f@gmail.com",
+      from: "easyhrplayform@gmail.com",
       to: admin?.email,
       subject: "Email Verification",
-      html: `<div> This is to Inform you that <strong>${user?.name} </strong> is now a member of your staff as Approved by you!</div>`,
+      html: readData,
     };
 
     transporter

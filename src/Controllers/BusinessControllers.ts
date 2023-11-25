@@ -10,8 +10,9 @@ import mongoose from "mongoose";
 import HistoryModels from "../Models/HistoryModels";
 import { EnvironmentVariables } from "../Config/EnvironmentVariables";
 import UserModels from "../Models/UserModels";
-import cloudinary from "../Config/Cloudinary";
+
 import { finalVerifyAdminEmail, finalVerifyUserEmail } from "../Emails/Email";
+import cloudinary from "../Config/Cloudinary";
 
 // Users Registration:
 export const BusinessRegistration = AsyncHandler(
