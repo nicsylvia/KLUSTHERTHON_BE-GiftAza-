@@ -19,6 +19,18 @@ const BusinessSchema: Schema<BusinessDetails> = new Schema(
       trim: true,
       validate: [isEmail, "Please enter a valid email"],
     },
+    token: {
+      type: String,
+      required: true,
+    },
+    OTP: {
+      type: String,
+      required: true,
+    },
+    OTPExpiry: {
+      type: String,
+      required: true,
+    },
     logo: {
       type: String,
     },

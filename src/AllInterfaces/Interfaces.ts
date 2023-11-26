@@ -19,6 +19,9 @@ export interface BusinessDetails {
   companyName: string;
   email: string;
   logo: string;
+  token: string;
+  OTP: string;
+  OTPExpiry: string;
   Balance: number;
   phoneNumber: number;
   password: string;
