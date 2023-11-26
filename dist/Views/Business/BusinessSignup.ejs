@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Fist Capital User Login Notification</title>
+    <title>Gift Aza Business Account Verification</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -45,14 +45,14 @@
       .otp-code {
         font-size: 24px;
         font-weight: bold;
-        color: #f15a22;
+        color: #8246f3;
         margin: 0;
       }
 
       .button {
         display: inline-block;
         padding: 10px 20px;
-        background-color: #f15a22;
+        background-color: #8246f3;
         color: white;
         text-decoration: none;
         border-radius: 3px;
@@ -60,7 +60,7 @@
       }
 
       .button:hover {
-        background-color: #f15a22;
+        background-color: #8246f3;
         color: white;
         transform: scale(0.9);
       }
@@ -75,19 +75,38 @@
   <body>
     <div class="container">
       <h1>Dear <%= name %>!</h1>
+      <p>Thank you for signing up on Gift Aza</p>
 
       <div>
-        You logged into your First Capital Financials account from a device <%=
-        devicename %>, at <%= logintime %>.
+        <p>
+          Please verify that your business email address is
+          <b style="color: #8246f3"><%= email %></b>, and that you entered it
+          when signing up on Gift Aza.
+        </p>
       </div>
 
+      <div class="otp-container">
+        <p>Your One-Time Password (OTP) is:</p>
+        <p class="otp-code"><%= OTP %></p>
+      </div>
+
+      <p>You can use the above OTP to verify your account.</p>
+
       <p>
-        If this login did not originate from you, please let us know by sending
-        an email to firstcapital@gmail.com. Alternatively, you can call
-        09061180473 or 012777700 immediately. Thanks
+        Kindly use this link to return to the page so you can proceed with your
+        registration
+      </p>
+      <a href="http://localhost:5173/otp_vertification" class="button"
+        >Continue Registration!</a
+      >
+
+      <p>
+        With the app, users can browse through a selection of gift cards from
+        top brands, purchase them with just a few taps, and send them to friends
+        and family with personalized messages.
       </p>
 
-      <p class="signature">Best regards,<br />First Capital</p>
+      <p class="signature">Best regards,<br />Gift Aza Team</p>
     </div>
   </body>
 </html>

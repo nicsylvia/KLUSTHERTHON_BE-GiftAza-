@@ -42,8 +42,24 @@ const BusinessSchema = new mongoose_1.Schema({
         trim: true,
         validate: [isEmail_1.default, "Please enter a valid email"],
     },
+    token: {
+        type: String,
+        required: true,
+    },
+    OTP: {
+        type: String,
+        required: true,
+    },
+    OTPExpiry: {
+        type: String,
+        required: true,
+    },
     logo: {
         type: String,
+    },
+    isVerified: {
+        type: Boolean,
+        default: false,
     },
     password: {
         type: String,

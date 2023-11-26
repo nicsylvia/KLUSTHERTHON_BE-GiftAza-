@@ -1,25 +1,43 @@
 import { NextFunction, Request, Response } from "express";
 import { AsyncHandler } from "../Utils/AsyncHandler";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import otpgenerator from "otp-generator";
 import { AppError, HTTPCODES } from "../Utils/AppError";
 import BusinessModels from "../Models/BusinessModels";
 import { uuid } from "uuidv4";
 import axios from "axios";
-import mongoose from "mongoose";
-import HistoryModels from "../Models/HistoryModels";
+import { addMinutes, isAfter } from "date-fns";
 import { EnvironmentVariables } from "../Config/EnvironmentVariables";
 import UserModels from "../Models/UserModels";
 
 import { finalVerifyAdminEmail, finalVerifyUserEmail } from "../Emails/Email";
 import cloudinary from "../Config/Cloudinary";
+import {
+  AccountVerificationEmail,
+  BusinessLoginNotification,
+} from "../Emails/Business/BusinessEmails";
 
 // Users Registration:
 export const BusinessRegistration = AsyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
-    const { companyName, email } = req.body;
+    const { companyName, email, phoneNumber, password } = req.body;
 
     const findEmail = await BusinessModels.findOne({ email });
+
+    const token = crypto.randomBytes(48).toString("hex");
+
+    const OTP = otpgenerator.generate(4, {
+      upperCaseAlphabets: false,
+      specialChars: false,
+      digits: true,
+      lowerCaseAlphabets: false,
+    });
+
+    const otpExpiryTimestamp = addMinutes(new Date(), 5);
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     if (findEmail) {
       next(
@@ -35,7 +53,10 @@ export const BusinessRegistration = AsyncHandler(
     const Business = await BusinessModels.create({
       companyName,
       email,
-
+      OTP,
+      OTPExpiry: otpExpiryTimestamp,
+      token,
+      password: hashedPassword,
       BusinessCode:
         codename +
         otpgenerator.generate(20, {
@@ -52,6 +73,47 @@ export const BusinessRegistration = AsyncHandler(
       message: "Successfully created Business Account",
       data: Business,
     });
+  }
+);
+
+export const BusinessVerification = AsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { OTP } = req.body;
+    const getbusiness = await BusinessModels.findOne({ OTP });
+
+    if (getbusiness) {
+      const currentTimestamp = new Date();
+      const otpExpiry = new Date(getbusiness.OTPExpiry);
+
+      if (isAfter(currentTimestamp, otpExpiry)) {
+        return next(
+          new AppError({
+            message: "OTP has expired",
+            httpcode: HTTPCODES.BAD_REQUEST,
+          })
+        );
+      }
+
+      await BusinessModels.findByIdAndUpdate(
+        getbusiness?._id,
+        {
+          OTP: "empty",
+          isVerified: true,
+        },
+        { new: true }
+      );
+      AccountVerificationEmail(getbusiness);
+      return res.status(HTTPCODES.OK).json({
+        message: "Business Verification Successfull, proceed to Login",
+      });
+    } else {
+      return next(
+        new AppError({
+          message: "Wrong OTP",
+          httpcode: HTTPCODES.BAD_REQUEST,
+        })
+      );
+    }
   }
 );
 
@@ -82,7 +144,28 @@ export const BusinessLogin = AsyncHandler(
       );
     }
 
+    if (!CheckEmail?.isVerified) {
+      return next(
+        new AppError({
+          message: "User not Verified",
+          httpcode: HTTPCODES.NOT_FOUND,
+        })
+      );
+    }
+    const localTime = new Date();
+    const GetDeviceName = req.get("User-Agent");
+    const formattedDateTime = localTime.toLocaleString("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "numeric",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+
     if (CheckEmail && CheckPassword) {
+      BusinessLoginNotification(CheckEmail, GetDeviceName, formattedDateTime);
       return res.status(200).json({
         message: "Login Successfull",
         data: CheckEmail,

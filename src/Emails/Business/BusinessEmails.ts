@@ -58,3 +58,51 @@ export const AccountVerificationEmail = async (user: any) => {
       console.log("An error occured in sending welcome email", err);
     });
 };
+
+// Login notification email:
+export const BusinessLoginNotification = async (
+  user: any,
+  deviceName: any,
+  loginTimestamp: any
+) => {
+  const accessToken: any = (await oAuth.getAccessToken()).token;
+
+  const transport = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      type: "OAuth2",
+      user: EnvironmentVariables.user,
+      clientId,
+      clientSecret,
+      refreshToken,
+      accessToken,
+    },
+  });
+
+  const loadFile = path.join(
+    __dirname,
+    "../../views/Business/LoginNotification.ejs"
+  );
+
+  const ReadUserData = await ejs.renderFile(loadFile, {
+    name: user.name,
+    devicename: deviceName,
+    logintime: loginTimestamp,
+  });
+
+  const mailOptions = {
+    from: EnvironmentVariables.from,
+    to: user?.email,
+    subject: "You Logged In",
+    html: ReadUserData,
+  };
+
+  transport
+    .sendMail(mailOptions)
+    .then(() => {
+      console.log("Login Notification..");
+    })
+    .catch((err) => {
+      console.log("An error occured in sending login notification email", err);
+    });
+};

@@ -11,4 +11,13 @@ exports.EnvironmentVariables = {
     MONGODB_STRING: process.env.LIVE_URL,
     API_KEY: process.env.api_key,
     API_SECRET: process.env.api_secret,
+    google_id: process.env.google_id,
+    google_secret: process.env.google_secret,
+    google_refreshToken: process.env.google_refreshToken,
+    google_redirectToken: process.env.google_redirectToken,
+    accessToken: process.env.accessToken,
+    from: process.env.from,
+    subject: process.env.subject,
+    user: process.env.user,
+    type: process.env.type,
 };

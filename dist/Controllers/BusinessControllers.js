@@ -12,19 +12,32 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VerifiedUserFinally = exports.UpdateBusinessLogo = exports.GetSingleBusinessCards = exports.GetSingleBusinessAcount = exports.BusinessLogin = exports.BusinessRegistration = void 0;
+exports.VerifiedUserFinally = exports.UpdateBusinessLogo = exports.GetSingleBusinessCards = exports.GetSingleBusinessAcount = exports.BusinessLogin = exports.BusinessVerification = exports.BusinessRegistration = void 0;
 const AsyncHandler_1 = require("../Utils/AsyncHandler");
 const bcrypt_1 = __importDefault(require("bcrypt"));
+const crypto_1 = __importDefault(require("crypto"));
 const otp_generator_1 = __importDefault(require("otp-generator"));
 const AppError_1 = require("../Utils/AppError");
 const BusinessModels_1 = __importDefault(require("../Models/BusinessModels"));
+const date_fns_1 = require("date-fns");
 const UserModels_1 = __importDefault(require("../Models/UserModels"));
 const Email_1 = require("../Emails/Email");
 const Cloudinary_1 = __importDefault(require("../Config/Cloudinary"));
+const BusinessEmails_1 = require("../Emails/Business/BusinessEmails");
 // Users Registration:
 exports.BusinessRegistration = (0, AsyncHandler_1.AsyncHandler)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { companyName, email } = req.body;
+    const { companyName, email, phoneNumber, password } = req.body;
     const findEmail = yield BusinessModels_1.default.findOne({ email });
+    const token = crypto_1.default.randomBytes(48).toString("hex");
+    const OTP = otp_generator_1.default.generate(4, {
+        upperCaseAlphabets: false,
+        specialChars: false,
+        digits: true,
+        lowerCaseAlphabets: false,
+    });
+    const otpExpiryTimestamp = (0, date_fns_1.addMinutes)(new Date(), 5);
+    const salt = yield bcrypt_1.default.genSalt(10);
+    const hashedPassword = yield bcrypt_1.default.hash(password, salt);
     if (findEmail) {
         next(new AppError_1.AppError({
             message: "Business with this account already exists",
@@ -35,6 +48,10 @@ exports.BusinessRegistration = (0, AsyncHandler_1.AsyncHandler)((req, res, next)
     const Business = yield BusinessModels_1.default.create({
         companyName,
         email,
+        OTP,
+        OTPExpiry: otpExpiryTimestamp,
+        token,
+        password: hashedPassword,
         BusinessCode: codename +
             otp_generator_1.default.generate(20, {
                 upperCaseAlphabets: false,
@@ -49,6 +66,34 @@ exports.BusinessRegistration = (0, AsyncHandler_1.AsyncHandler)((req, res, next)
         message: "Successfully created Business Account",
         data: Business,
     });
+}));
+exports.BusinessVerification = (0, AsyncHandler_1.AsyncHandler)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { OTP } = req.body;
+    const getbusiness = yield BusinessModels_1.default.findOne({ OTP });
+    if (getbusiness) {
+        const currentTimestamp = new Date();
+        const otpExpiry = new Date(getbusiness.OTPExpiry);
+        if ((0, date_fns_1.isAfter)(currentTimestamp, otpExpiry)) {
+            return next(new AppError_1.AppError({
+                message: "OTP has expired",
+                httpcode: AppError_1.HTTPCODES.BAD_REQUEST,
+            }));
+        }
+        yield BusinessModels_1.default.findByIdAndUpdate(getbusiness === null || getbusiness === void 0 ? void 0 : getbusiness._id, {
+            OTP: "empty",
+            isVerified: true,
+        }, { new: true });
+        (0, BusinessEmails_1.AccountVerificationEmail)(getbusiness);
+        return res.status(AppError_1.HTTPCODES.OK).json({
+            message: "Business Verification Successfull, proceed to Login",
+        });
+    }
+    else {
+        return next(new AppError_1.AppError({
+            message: "Wrong OTP",
+            httpcode: AppError_1.HTTPCODES.BAD_REQUEST,
+        }));
+    }
 }));
 // Business Login:
 exports.BusinessLogin = (0, AsyncHandler_1.AsyncHandler)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -67,7 +112,25 @@ exports.BusinessLogin = (0, AsyncHandler_1.AsyncHandler)((req, res, next) => __a
             httpcode: AppError_1.HTTPCODES.CONFLICT,
         }));
     }
+    if (!(CheckEmail === null || CheckEmail === void 0 ? void 0 : CheckEmail.isVerified)) {
+        return next(new AppError_1.AppError({
+            message: "User not Verified",
+            httpcode: AppError_1.HTTPCODES.NOT_FOUND,
+        }));
+    }
+    const localTime = new Date();
+    const GetDeviceName = req.get("User-Agent");
+    const formattedDateTime = localTime.toLocaleString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+    });
     if (CheckEmail && CheckPassword) {
+        (0, BusinessEmails_1.BusinessLoginNotification)(CheckEmail, GetDeviceName, formattedDateTime);
         return res.status(200).json({
             message: "Login Successfull",
             data: CheckEmail,
