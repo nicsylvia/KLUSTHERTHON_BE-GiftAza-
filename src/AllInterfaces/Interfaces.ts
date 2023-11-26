@@ -23,6 +23,7 @@ export interface BusinessDetails {
   OTP: string;
   OTPExpiry: string;
   Balance: number;
+  isVerified: boolean;
   phoneNumber: number;
   password: string;
   confirmPassword: string;

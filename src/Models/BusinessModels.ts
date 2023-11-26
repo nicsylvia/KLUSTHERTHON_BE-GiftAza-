@@ -34,6 +34,10 @@ const BusinessSchema: Schema<BusinessDetails> = new Schema(
     logo: {
       type: String,
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
     password: {
       type: String,
       // required: [true, "Please enter your Password"],
