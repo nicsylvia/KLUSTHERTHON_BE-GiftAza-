@@ -35,6 +35,7 @@ export interface BusinessDetails {
   status: string;
   TransactionHistory: {}[];
   giftCard: {}[];
+  viewUser: {}[];
   createUserProfile: {}[];
   history: {}[];
   wallet: {}[];

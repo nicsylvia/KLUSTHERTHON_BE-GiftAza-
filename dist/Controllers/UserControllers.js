@@ -24,6 +24,7 @@ const Email_1 = require("../Emails/Email");
 const wallet_models_1 = __importDefault(require("../Models/wallet.models"));
 // Users Registration:
 exports.UsersRegistration = (0, AsyncHandler_1.AsyncHandler)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const { name, email, companyName } = req.body;
     const dater = Date.now();
     const num = 234;
@@ -53,7 +54,8 @@ exports.UsersRegistration = (0, AsyncHandler_1.AsyncHandler)((req, res, next) =>
             debit: 0,
         });
         Users === null || Users === void 0 ? void 0 : Users.wallet.push(new mongoose_1.default.Types.ObjectId(userWallet === null || userWallet === void 0 ? void 0 : userWallet._id));
-        Users.save();
+        (_a = getBusiness === null || getBusiness === void 0 ? void 0 : getBusiness.viewUser) === null || _a === void 0 ? void 0 : _a.push(new mongoose_1.default.Types.ObjectId(userWallet === null || userWallet === void 0 ? void 0 : userWallet._id));
+        getBusiness === null || getBusiness === void 0 ? void 0 : getBusiness.save();
         (0, Email_1.verifyUserEmail)(Users);
         (0, Email_1.verifyUserEmailByAdmin)(Users, getBusiness);
         return res.status(201).json({
@@ -287,7 +289,7 @@ const MakeTransfer = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.MakeTransfer = MakeTransfer;
 // Fund your wallet from your bank
 const FundWalletFromBank = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _b;
     try {
         const getUserBank = yield UserModels_1.default.findById(req.params.userID);
         const getUserWallet = yield wallet_models_1.default.findById(req.params.walletID);
@@ -303,7 +305,7 @@ const FundWalletFromBank = (req, res) => __awaiter(void 0, void 0, void 0, funct
             transactionReference: transactionRef,
         });
         // Pushing in the receipt to the user
-        (_a = getUserBank === null || getUserBank === void 0 ? void 0 : getUserBank.history) === null || _a === void 0 ? void 0 : _a.push(new mongoose_1.default.Types.ObjectId(WalletCreditReceipt === null || WalletCreditReceipt === void 0 ? void 0 : WalletCreditReceipt._id));
+        (_b = getUserBank === null || getUserBank === void 0 ? void 0 : getUserBank.history) === null || _b === void 0 ? void 0 : _b.push(new mongoose_1.default.Types.ObjectId(WalletCreditReceipt === null || WalletCreditReceipt === void 0 ? void 0 : WalletCreditReceipt._id));
         return res.status(200).json({
             message: "Wallet credit successfuully",
             data: WalletCreditReceipt,

@@ -55,7 +55,9 @@ export const UsersRegistration = AsyncHandler(
       });
 
       Users?.wallet.push(new mongoose.Types.ObjectId(userWallet?._id));
-      Users.save();
+
+      getBusiness?.viewUser?.push(new mongoose.Types.ObjectId(userWallet?._id));
+      getBusiness?.save();
       verifyUserEmail(Users);
       verifyUserEmailByAdmin(Users, getBusiness);
       return res.status(201).json({

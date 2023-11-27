@@ -217,7 +217,11 @@ export const GetSingleBusinessAcount = AsyncHandler(
 // Get single Business Account:
 export const GetSingleBusinessCards = AsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const SingleBusiness = await BusinessModels.findById(req.params.businessID);
+    const SingleBusiness = await BusinessModels.findById(
+      req.params.businessID
+    ).populate({
+      path: "viewUser",
+    });
 
     if (!SingleBusiness) {
       next(

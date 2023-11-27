@@ -101,6 +101,12 @@ const BusinessSchema: Schema<BusinessDetails> = new Schema(
         ref: "admin-Wallets",
       },
     ],
+    viewUser: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ViewUsers",
+      },
+    ],
   },
   {
     timestamps: true,

@@ -170,7 +170,9 @@ exports.GetSingleBusinessAcount = (0, AsyncHandler_1.AsyncHandler)((req, res, ne
 }));
 // Get single Business Account:
 exports.GetSingleBusinessCards = (0, AsyncHandler_1.AsyncHandler)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const SingleBusiness = yield BusinessModels_1.default.findById(req.params.businessID);
+    const SingleBusiness = yield BusinessModels_1.default.findById(req.params.businessID).populate({
+        path: "viewUser",
+    });
     if (!SingleBusiness) {
         next(new AppError_1.AppError({
             message: "Business Account not found",
