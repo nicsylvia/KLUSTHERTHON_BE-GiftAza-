@@ -2,6 +2,7 @@ import express from "express";
 import {
   BusinessLogin,
   BusinessRegistration,
+  BusinessVerification,
   GetSingleBusinessAcount,
   GetSingleBusinessCards,
   UpdateBusinessLogo,
@@ -13,6 +14,7 @@ import { BusinessLogo } from "../Config/Multer";
 const BusinessRouter = express.Router();
 
 BusinessRouter.route("/registerbusiness").post(BusinessRegistration);
+BusinessRouter.route("/verifybusiness").post(BusinessVerification);
 BusinessRouter.route("/loginbusiness").post(BusinessLogin);
 BusinessRouter.route("/getsinglebusiness/:businessID").get(
   GetSingleBusinessAcount

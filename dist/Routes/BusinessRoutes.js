@@ -8,6 +8,7 @@ const BusinessControllers_1 = require("../Controllers/BusinessControllers");
 const Multer_1 = require("../Config/Multer");
 const BusinessRouter = express_1.default.Router();
 BusinessRouter.route("/registerbusiness").post(BusinessControllers_1.BusinessRegistration);
+BusinessRouter.route("/verifybusiness").post(BusinessControllers_1.BusinessVerification);
 BusinessRouter.route("/loginbusiness").post(BusinessControllers_1.BusinessLogin);
 BusinessRouter.route("/getsinglebusiness/:businessID").get(BusinessControllers_1.GetSingleBusinessAcount);
 BusinessRouter.route("/getsinglebusiness/:businessID/cards").get(BusinessControllers_1.GetSingleBusinessCards);

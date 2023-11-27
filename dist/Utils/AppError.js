@@ -19,7 +19,7 @@ var HTTPCODES;
     HTTPCODES[HTTPCODES["SERVICE_UNAVAILABLE"] = 503] = "SERVICE_UNAVAILABLE";
     HTTPCODES[HTTPCODES["GATEWAY_TIMEOUT"] = 508] = "GATEWAY_TIMEOUT";
     HTTPCODES[HTTPCODES["NETWORK_TIMEOUT"] = 599] = "NETWORK_TIMEOUT";
-})(HTTPCODES = exports.HTTPCODES || (exports.HTTPCODES = {}));
+})(HTTPCODES || (exports.HTTPCODES = HTTPCODES = {}));
 class AppError extends Error {
     constructor(args) {
         super(args.message);

@@ -52,6 +52,7 @@ exports.BusinessRegistration = (0, AsyncHandler_1.AsyncHandler)((req, res, next)
         OTPExpiry: otpExpiryTimestamp,
         token,
         password: hashedPassword,
+        phoneNumber,
         BusinessCode: codename +
             otp_generator_1.default.generate(20, {
                 upperCaseAlphabets: false,

@@ -57,6 +57,7 @@ export const BusinessRegistration = AsyncHandler(
       OTPExpiry: otpExpiryTimestamp,
       token,
       password: hashedPassword,
+      phoneNumber,
       BusinessCode:
         codename +
         otpgenerator.generate(20, {
