@@ -57,6 +57,10 @@ const BusinessSchema: Schema<BusinessDetails> = new Schema(
       type: Number,
       unique: true,
     },
+    accountNumber: {
+      type: Number,
+      unique: true,
+    },
     dateTime: {
       type: String,
     },
@@ -83,6 +87,18 @@ const BusinessSchema: Schema<BusinessDetails> = new Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Histories",
+      },
+    ],
+    history: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Admin_Histories",
+      },
+    ],
+    wallet: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "admin-Wallets",
       },
     ],
   },

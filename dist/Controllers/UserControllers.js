@@ -12,16 +12,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GetSingleUser = exports.UsersLogin = exports.UsersRegistration = void 0;
+exports.FundWalletFromBank = exports.MakeTransfer = exports.GetSingleUser = exports.UsersLogin = exports.UsersRegistration = void 0;
 const UserModels_1 = __importDefault(require("../Models/UserModels"));
 const AsyncHandler_1 = require("../Utils/AsyncHandler");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const AppError_1 = require("../Utils/AppError");
 const BusinessModels_1 = __importDefault(require("../Models/BusinessModels"));
+const HistoryModels_1 = __importDefault(require("../Models/HistoryModels"));
+const mongoose_1 = __importDefault(require("mongoose"));
 const Email_1 = require("../Emails/Email");
+const wallet_models_1 = __importDefault(require("../Models/wallet.models"));
 // Users Registration:
 exports.UsersRegistration = (0, AsyncHandler_1.AsyncHandler)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, email, companyName } = req.body;
+    const dater = Date.now();
+    const num = 234;
+    const GenerateAccountNumber = Math.floor(Math.random() * 10) + dater;
     const findEmail = yield UserModels_1.default.findOne({ email });
     const getBusiness = yield BusinessModels_1.default.findOne({
         companyName: companyName,
@@ -36,8 +42,18 @@ exports.UsersRegistration = (0, AsyncHandler_1.AsyncHandler)((req, res, next) =>
         const Users = yield UserModels_1.default.create({
             name,
             email,
+            accountNumber: GenerateAccountNumber,
             // phoneNumber: "234" + phoneNumber,
         });
+        const userWallet = yield wallet_models_1.default.create({
+            _id: Users === null || Users === void 0 ? void 0 : Users._id,
+            Owner: Users === null || Users === void 0 ? void 0 : Users.name,
+            Balance: 1000,
+            credit: 0,
+            debit: 0,
+        });
+        Users === null || Users === void 0 ? void 0 : Users.wallet.push(new mongoose_1.default.Types.ObjectId(userWallet === null || userWallet === void 0 ? void 0 : userWallet._id));
+        Users.save();
         (0, Email_1.verifyUserEmail)(Users);
         (0, Email_1.verifyUserEmailByAdmin)(Users, getBusiness);
         return res.status(201).json({
@@ -194,3 +210,110 @@ exports.GetSingleUser = (0, AsyncHandler_1.AsyncHandler)((req, res, next) => __a
 //     }
 //   }
 // );
+const MakeTransfer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { accountNumber, amount } = req.body;
+        const GenerateTransactionReference = Math.floor(Math.random() * 6745689743) + 243;
+        // RECEIVER ACCOUNT:
+        const getReciever = yield UserModels_1.default.findOne({ accountNumber });
+        const getRecieverWallet = yield wallet_models_1.default.findById(getReciever === null || getReciever === void 0 ? void 0 : getReciever._id);
+        // SENDER ACCOUNT:
+        const getUser = yield UserModels_1.default.findById(req.params.userID);
+        const getUserWallet = yield wallet_models_1.default.findById(req.params.walletID);
+        if (getUser && getReciever) {
+            if (amount > (getUserWallet === null || getUserWallet === void 0 ? void 0 : getUserWallet.Balance)) {
+                return res.status(400).json({
+                    message: "Insufficient Funds",
+                });
+            }
+            else {
+                // Avoid user sending my money to my account
+                if ((getUser === null || getUser === void 0 ? void 0 : getUser.accountNumber) === accountNumber) {
+                    return res.status(400).json({
+                        message: "This is your account!!!...You can't transfer funds to yourself from this wallet",
+                    });
+                }
+                else {
+                    // Updating the sender wallet to receive the debit alert
+                    yield wallet_models_1.default.findByIdAndUpdate(getUserWallet === null || getUserWallet === void 0 ? void 0 : getUserWallet._id, {
+                        Balance: (getUserWallet === null || getUserWallet === void 0 ? void 0 : getUserWallet.Balance) - amount,
+                        credit: 0,
+                        debit: amount,
+                    }
+                    // to see the changes immediately
+                    // {new: true}
+                    );
+                    // Create the receipt/history of your transaction:
+                    const createSenderHistory = yield HistoryModels_1.default.create({
+                        message: `You have sent ${amount} to ${getReciever.name}`,
+                        transactionReference: GenerateTransactionReference,
+                        transactionType: "Debit",
+                    });
+                    getUser.history.push(new mongoose_1.default.Types.ObjectId(createSenderHistory === null || createSenderHistory === void 0 ? void 0 : createSenderHistory._id));
+                    getUser.save();
+                    // Updating the receiver wallet to receive the credit alert:
+                    yield wallet_models_1.default.findByIdAndUpdate(getRecieverWallet === null || getRecieverWallet === void 0 ? void 0 : getRecieverWallet._id, {
+                        Balance: (getRecieverWallet === null || getRecieverWallet === void 0 ? void 0 : getRecieverWallet.Balance) + amount,
+                        credit: amount,
+                        debit: 0,
+                    });
+                    // Create the credit alert message for the receiver:
+                    const createReceiverHistory = yield HistoryModels_1.default.create({
+                        message: `An amount of ${amount} has been sent to you by ${getUser.name}`,
+                        transactionReference: GenerateTransactionReference,
+                        transactionType: "Credit",
+                    });
+                    getReciever.history.push(new mongoose_1.default.Types.ObjectId(createReceiverHistory === null || createReceiverHistory === void 0 ? void 0 : createReceiverHistory._id));
+                    getReciever === null || getReciever === void 0 ? void 0 : getReciever.save();
+                }
+            }
+            return res.status(200).json({
+                messgae: "Transaction Successfull",
+            });
+        }
+        else {
+            return res.status(404).json({
+                message: "Account not found",
+            });
+        }
+    }
+    catch (error) {
+        return res.status(404).json({
+            message: "An error occured",
+            data: error,
+        });
+    }
+});
+exports.MakeTransfer = MakeTransfer;
+// Fund your wallet from your bank
+const FundWalletFromBank = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const getUserBank = yield UserModels_1.default.findById(req.params.userID);
+        const getUserWallet = yield wallet_models_1.default.findById(req.params.walletID);
+        const { amount } = req.body;
+        const transactionRef = (getUserBank === null || getUserBank === void 0 ? void 0 : getUserBank.name) + Math.floor(Math.random() * 2000273);
+        yield wallet_models_1.default.findByIdAndUpdate(getUserWallet === null || getUserWallet === void 0 ? void 0 : getUserWallet._id, {
+            Balance: (getUserWallet === null || getUserWallet === void 0 ? void 0 : getUserWallet.Balance) + amount,
+        });
+        // Get receipt for my transfer from bank to wallet
+        const WalletCreditReceipt = yield HistoryModels_1.default.create({
+            message: `An amount of ${amount} has been credited to your wallet from your bank`,
+            transactionType: "Credit",
+            transactionReference: transactionRef,
+        });
+        // Pushing in the receipt to the user
+        (_a = getUserBank === null || getUserBank === void 0 ? void 0 : getUserBank.history) === null || _a === void 0 ? void 0 : _a.push(new mongoose_1.default.Types.ObjectId(WalletCreditReceipt === null || WalletCreditReceipt === void 0 ? void 0 : WalletCreditReceipt._id));
+        return res.status(200).json({
+            message: "Wallet credit successfuully",
+            data: WalletCreditReceipt,
+        });
+    }
+    catch (error) {
+        return res.status(404).json({
+            message: "An error occured",
+            data: error,
+        });
+    }
+});
+exports.FundWalletFromBank = FundWalletFromBank;

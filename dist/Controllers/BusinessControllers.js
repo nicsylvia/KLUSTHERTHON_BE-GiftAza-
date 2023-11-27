@@ -24,6 +24,8 @@ const UserModels_1 = __importDefault(require("../Models/UserModels"));
 const Email_1 = require("../Emails/Email");
 const Cloudinary_1 = __importDefault(require("../Config/Cloudinary"));
 const BusinessEmails_1 = require("../Emails/Business/BusinessEmails");
+const mongoose_1 = __importDefault(require("mongoose"));
+const wallet_models_1 = __importDefault(require("../Models/wallet.models"));
 // Users Registration:
 exports.BusinessRegistration = (0, AsyncHandler_1.AsyncHandler)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { companyName, email, phoneNumber, password } = req.body;
@@ -38,6 +40,9 @@ exports.BusinessRegistration = (0, AsyncHandler_1.AsyncHandler)((req, res, next)
     const otpExpiryTimestamp = (0, date_fns_1.addMinutes)(new Date(), 5);
     const salt = yield bcrypt_1.default.genSalt(10);
     const hashedPassword = yield bcrypt_1.default.hash(password, salt);
+    const dater = Date.now();
+    const num = 234;
+    const GenerateAccountNumber = Math.floor(Math.random() * 10) + dater;
     if (findEmail) {
         next(new AppError_1.AppError({
             message: "Business with this account already exists",
@@ -53,6 +58,7 @@ exports.BusinessRegistration = (0, AsyncHandler_1.AsyncHandler)((req, res, next)
         token,
         password: hashedPassword,
         phoneNumber,
+        accountNumber: GenerateAccountNumber,
         BusinessCode: codename +
             otp_generator_1.default.generate(20, {
                 upperCaseAlphabets: false,
@@ -63,6 +69,15 @@ exports.BusinessRegistration = (0, AsyncHandler_1.AsyncHandler)((req, res, next)
         Balance: 0,
         status: "Business",
     });
+    const userWallet = yield wallet_models_1.default.create({
+        _id: Business === null || Business === void 0 ? void 0 : Business._id,
+        Owner: Business === null || Business === void 0 ? void 0 : Business.companyName,
+        Balance: 1000,
+        credit: 0,
+        debit: 0,
+    });
+    Business === null || Business === void 0 ? void 0 : Business.wallet.push(new mongoose_1.default.Types.ObjectId(userWallet === null || userWallet === void 0 ? void 0 : userWallet._id));
+    Business.save();
     (0, BusinessEmails_1.AccountVerificationEmail)(Business);
     return res.status(201).json({
         message: "Successfully created Business Account",
@@ -200,7 +215,12 @@ const VerifiedUserFinally = (req, res) => __awaiter(void 0, void 0, void 0, func
         if (response === "Yes") {
             if (getUser) {
                 yield UserModels_1.default.findByIdAndUpdate(req.params.UserId, {
-                    token: `${Math.floor(Math.random() * 100000) + (getUser === null || getUser === void 0 ? void 0 : getUser.name)}`,
+                    token: otp_generator_1.default.generate(4, {
+                        upperCaseAlphabets: false,
+                        specialChars: false,
+                        digits: true,
+                        lowerCaseAlphabets: false,
+                    }),
                 }, { new: true });
                 (0, Email_1.finalVerifyAdminEmail)(getUser, company);
                 (0, Email_1.finalVerifyUserEmail)(getUser);

@@ -80,6 +80,10 @@ const BusinessSchema = new mongoose_1.Schema({
         type: Number,
         unique: true,
     },
+    accountNumber: {
+        type: Number,
+        unique: true,
+    },
     dateTime: {
         type: String,
     },
@@ -106,6 +110,18 @@ const BusinessSchema = new mongoose_1.Schema({
         {
             type: mongoose_1.default.Schema.Types.ObjectId,
             ref: "Histories",
+        },
+    ],
+    history: [
+        {
+            type: mongoose_1.default.Schema.Types.ObjectId,
+            ref: "Admin_Histories",
+        },
+    ],
+    wallet: [
+        {
+            type: mongoose_1.default.Schema.Types.ObjectId,
+            ref: "admin-Wallets",
         },
     ],
 }, {

@@ -17,6 +17,8 @@ import {
   AccountVerificationEmail,
   BusinessLoginNotification,
 } from "../Emails/Business/BusinessEmails";
+import mongoose from "mongoose";
+import WalletModels from "../Models/wallet.models";
 
 // Users Registration:
 export const BusinessRegistration = AsyncHandler(
@@ -39,6 +41,11 @@ export const BusinessRegistration = AsyncHandler(
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    const dater = Date.now();
+
+    const num = 234;
+
+    const GenerateAccountNumber = Math.floor(Math.random() * 10) + dater;
     if (findEmail) {
       next(
         new AppError({
@@ -58,6 +65,7 @@ export const BusinessRegistration = AsyncHandler(
       token,
       password: hashedPassword,
       phoneNumber,
+      accountNumber: GenerateAccountNumber,
       BusinessCode:
         codename +
         otpgenerator.generate(20, {
@@ -69,6 +77,16 @@ export const BusinessRegistration = AsyncHandler(
       Balance: 0,
       status: "Business",
     });
+    const userWallet = await WalletModels.create({
+      _id: Business?._id,
+      Owner: Business?.companyName,
+      Balance: 1000,
+      credit: 0,
+      debit: 0,
+    });
+
+    Business?.wallet.push(new mongoose.Types.ObjectId(userWallet?._id));
+    Business.save();
     AccountVerificationEmail(Business);
     return res.status(201).json({
       message: "Successfully created Business Account",
@@ -269,7 +287,12 @@ export const VerifiedUserFinally = async (req: Request, res: Response) => {
         await UserModels.findByIdAndUpdate(
           req.params.UserId,
           {
-            token: `${Math.floor(Math.random() * 100000) + getUser?.name}`,
+            token: otpgenerator.generate(4, {
+              upperCaseAlphabets: false,
+              specialChars: false,
+              digits: true,
+              lowerCaseAlphabets: false,
+            }),
           },
           { new: true }
         );

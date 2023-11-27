@@ -68,6 +68,9 @@ const UserSchema = new mongoose_1.Schema({
     dateTime: {
         type: String,
     },
+    accountNumber: {
+        type: Number,
+    },
     // status: {
     //   type: String,
     //   required: [true, "Please enter your status"],
@@ -91,6 +94,18 @@ const UserSchema = new mongoose_1.Schema({
         {
             type: mongoose_1.default.Schema.Types.ObjectId,
             ref: "GiftCards",
+        },
+    ],
+    history: [
+        {
+            type: mongoose_1.default.Schema.Types.ObjectId,
+            ref: "Histories",
+        },
+    ],
+    wallet: [
+        {
+            type: mongoose_1.default.Schema.Types.ObjectId,
+            ref: "Users-Wallets",
         },
     ],
 }, {

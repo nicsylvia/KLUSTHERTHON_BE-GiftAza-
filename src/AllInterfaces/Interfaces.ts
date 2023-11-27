@@ -5,12 +5,15 @@ export interface UserDetails {
   email: string;
   image: string;
   phoneNumber: number;
+  accountNumber: number;
   password: string;
   confirmPassword: string;
   status: string;
   TransactionHistory: {}[];
   companyGiftCards: {}[];
   PurchasedGiftCards: {}[];
+  history: {}[];
+  wallet: {}[];
   dateTime: string;
   token: string;
 }
@@ -23,6 +26,7 @@ export interface BusinessDetails {
   OTP: string;
   OTPExpiry: string;
   Balance: number;
+  accountNumber: number;
   isVerified: boolean;
   phoneNumber: number;
   password: string;
@@ -32,6 +36,8 @@ export interface BusinessDetails {
   TransactionHistory: {}[];
   giftCard: {}[];
   createUserProfile: {}[];
+  history: {}[];
+  wallet: {}[];
   dateTime: string;
 }
 
