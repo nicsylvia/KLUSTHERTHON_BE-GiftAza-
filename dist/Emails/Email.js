@@ -44,7 +44,7 @@ const verifyUserEmailByAdmin = (user, admin) => __awaiter(void 0, void 0, void 0
             name: user === null || user === void 0 ? void 0 : user.name,
             adminname: admin === null || admin === void 0 ? void 0 : admin.name,
             id: user === null || user === void 0 ? void 0 : user._id,
-            url: `${url}/api/staff/${user === null || user === void 0 ? void 0 : user._id}/verification`,
+            url: `${url}/${user === null || user === void 0 ? void 0 : user._id}/verification`,
         });
         let mailerOptions = {
             from: "GiftAza Team",

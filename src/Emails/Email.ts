@@ -39,7 +39,7 @@ export const verifyUserEmailByAdmin = async (user: any, admin: any) => {
       name: user?.name,
       adminname: admin?.name,
       id: user?._id,
-      url: `${url}/api/staff/${user?._id}/verification`,
+      url: `${url}/${user?._id}/verification`,
     });
 
     let mailerOptions = {
