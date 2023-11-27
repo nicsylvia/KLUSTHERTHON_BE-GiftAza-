@@ -69,7 +69,7 @@ export const BusinessRegistration = AsyncHandler(
       Balance: 0,
       status: "Business",
     });
-
+    AccountVerificationEmail(Business);
     return res.status(201).json({
       message: "Successfully created Business Account",
       data: Business,

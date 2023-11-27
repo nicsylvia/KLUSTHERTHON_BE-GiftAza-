@@ -33,7 +33,7 @@ export const AccountVerificationEmail = async (user: any) => {
 
   const loadFile = path.join(
     __dirname,
-    "../../views/Business/BusinessSignup.ejs"
+    "../../Views/Business/BusinessSignup.ejs"
   );
 
   const ReadUserData = await ejs.renderFile(loadFile, {
@@ -81,7 +81,7 @@ export const BusinessLoginNotification = async (
 
   const loadFile = path.join(
     __dirname,
-    "../../views/Business/LoginNotification.ejs"
+    "../../Views/Business/LoginNotification.ejs"
   );
 
   const ReadUserData = await ejs.renderFile(loadFile, {

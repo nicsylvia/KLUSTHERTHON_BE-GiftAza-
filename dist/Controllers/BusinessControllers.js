@@ -63,6 +63,7 @@ exports.BusinessRegistration = (0, AsyncHandler_1.AsyncHandler)((req, res, next)
         Balance: 0,
         status: "Business",
     });
+    (0, BusinessEmails_1.AccountVerificationEmail)(Business);
     return res.status(201).json({
         message: "Successfully created Business Account",
         data: Business,

@@ -14,7 +14,7 @@ const REFRESH =
 const oAuth = new google.auth.OAuth2(GOOGLE_ID, GOOGLE_SECRET, REFRESH);
 oAuth.setCredentials({ refresh_token: REFRESH });
 
-const url = `https://mavericks.pages.dev`;
+const url = `https://giftaza.vercel.app`;
 
 export const verifyUserEmailByAdmin = async (user: any, admin: any) => {
   try {
@@ -32,19 +32,18 @@ export const verifyUserEmailByAdmin = async (user: any, admin: any) => {
       },
     });
 
-    const getData = path.join(__dirname, "../views/AdminUserSignup.ejs");
+    const getData = path.join(__dirname, "../../Views/AdminUserSignup.ejs");
 
     const readData = await ejs.renderFile(getData, {
       companyName: admin.companyName,
       name: user?.name,
       adminname: admin?.name,
-      email: user?.email,
       id: user?._id,
       url: `${url}/api/staff/${user?._id}/verification`,
     });
 
     let mailerOptions = {
-      from: "easyhrplayform@gmail.com",
+      from: "GiftAza Team",
       to: admin?.email,
       subject: "Staff Email Verification",
       html: readData,
@@ -79,17 +78,16 @@ export const verifyUserEmail = async (user: any) => {
       },
     });
 
-    const getData = path.join(__dirname, "../views/UserSignUp.ejs");
+    const getData = path.join(__dirname, "../../Views/UserSignUp.ejs");
 
     const readData = await ejs.renderFile(getData, {
       name: user?.name,
       email: user?.email,
       id: user?._id,
-      url: `${url}/${user?._id}/verifystaff`,
     });
 
     let mailerOptions = {
-      from: "easyhrplayform@gmail.com",
+      from: "GiftAza Team",
       to: user?.email,
       subject: "Email Verification",
       html: readData,
@@ -124,7 +122,10 @@ export const finalVerifyUserEmail = async (user: any) => {
       },
     });
 
-    const getData = path.join(__dirname, "../views/FinalUserVerification.ejs");
+    const getData = path.join(
+      __dirname,
+      "../../Views/FinalUserVerification.ejs"
+    );
 
     const readData = await ejs.renderFile(getData, {
       name: user?.name,
@@ -173,7 +174,7 @@ export const finalVerifyAdminEmail = async (user: any, admin: any) => {
 
     const getData = path.join(
       __dirname,
-      "../views/FinalAdminStaffVerification.ejs"
+      "../../Views/FinalAdminStaffVerification.ejs"
     );
     const readData = await ejs.renderFile(getData, {
       name: user?.name,

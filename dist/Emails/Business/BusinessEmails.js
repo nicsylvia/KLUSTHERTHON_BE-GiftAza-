@@ -38,7 +38,7 @@ const AccountVerificationEmail = (user) => __awaiter(void 0, void 0, void 0, fun
             accessToken,
         },
     });
-    const loadFile = path_1.default.join(__dirname, "../../views/Business/BusinessSignup.ejs");
+    const loadFile = path_1.default.join(__dirname, "../../Views/Business/BusinessSignup.ejs");
     const ReadUserData = yield ejs_1.default.renderFile(loadFile, {
         name: user.name,
         email: user.email,
@@ -74,7 +74,7 @@ const BusinessLoginNotification = (user, deviceName, loginTimestamp) => __awaite
             accessToken,
         },
     });
-    const loadFile = path_1.default.join(__dirname, "../../views/Business/LoginNotification.ejs");
+    const loadFile = path_1.default.join(__dirname, "../../Views/Business/LoginNotification.ejs");
     const ReadUserData = yield ejs_1.default.renderFile(loadFile, {
         name: user.name,
         devicename: deviceName,
