@@ -67,6 +67,7 @@ exports.BusinessRegistration = (0, AsyncHandler_1.AsyncHandler)((req, res, next)
                 lowerCaseAlphabets: false,
             }),
         Balance: 0,
+        isVerified: true,
         status: "Business",
     });
     const userWallet = yield wallet_models_1.default.create({

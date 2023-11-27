@@ -75,6 +75,7 @@ export const BusinessRegistration = AsyncHandler(
           lowerCaseAlphabets: false,
         }),
       Balance: 0,
+      isVerified: true,
       status: "Business",
     });
     const userWallet = await WalletModels.create({
